@@ -1,0 +1,519 @@
+{% extends "index_layout.html" %}
+
+{% block main_section %}
+<!-- card with graph section row -->
+<div class="row justify-content-around card-section p-3" style="row-gap: 10px;">
+    <!-- The Stat table showing the records -->
+    <div class="col-md-4">
+        <div class="card" style="height: 353px;">
+            <div class="card-body">
+                <h5 class="card-title">Account statistics</h5><hr style="margin-bottom: 0;">
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="card-title">Total Savings:</td>
+                        <td>{{ income_savings }}</td>
+                    </tr>
+                    <tr>
+                        <td class="card-title">Savings Used:</td>
+                        <td>{{ expense_savings }}</td>
+                    </tr>
+                    <tr>
+                        <td class="card-title">Savings Balance:</td>
+                        <td>{{ savings_bal }}</td>
+                    </tr>
+                    <tr>
+                        <td class="card-title">Overall Balance (Without Savings):</td>
+                        <td>{{ bal }} ({{ ws_bal }})</td>
+                    </tr>
+                    <tr>
+                        <td class="card-title">Overall Percentage Saved:</td>
+                        <td>{{ savings_per }}%</td>
+                    </tr>
+                    <tr>
+                        <td class="card-title">Number of savings transactions:</td>
+                        <td>{{ savings_trans }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- The Doughnut chart showing the proportion-->
+    <div class="col-md-8">
+        <canvas id="myDough" style="background-color: #112233;border-radius: 5px;"></canvas>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                // Get the data passed from Flask
+                const data = {{ data | tojson }};
+                
+                // Initialize the chart with an empty dataset
+                const ctx = document.getElementById('myDough').getContext('2d');
+                const myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: data.datasets[0].label,
+                            backgroundColor: data.datasets[0].backgroundColor,
+                            borderColor: data.datasets[0].borderColor,
+                            data: [],
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            duration: 2000, // Animation duration in milliseconds
+                            easing: 'linear', // Linear easing for smooth animation
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Month'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Function to add data points smoothly
+                function addDataPoint(chart, label, data) {
+                    chart.data.labels.push(label);
+                    chart.data.datasets.forEach((dataset) => {
+                        dataset.data.push(data);
+                    });
+                    chart.update();
+                }
+
+                // Add data points smoothly with a continuous animation
+                const labels = data.labels;
+                const datasetData = data.datasets[0].data;
+                let index = 0;
+                function addNextPoint() {
+                    if (index < labels.length) {
+                        addDataPoint(myChart, labels[index], datasetData[index]);
+                        index++;
+                        setTimeout(addNextPoint, 2000); // 1 second delay between points
+                    }
+                }
+                addNextPoint();
+            });
+        </script>
+    </div>
+</div>
+
+<!-- This is the savings table details -->
+<div class="row table-section">
+    <div class="col-md-12 table-responsive">
+        <table class="table table-hover table-responsive">
+            <thead>
+                <th>
+                    <td>Status</td>
+                    <td>Name</td>
+                    <td>Amount</td>
+                    <td>Comment</td>
+                    <td>Date</td>
+                    <td></td>
+                    <td></td>
+                </th>
+            </thead>
+            <tbody>
+                <!-- This is for an empty -->
+                {% if checker == 0 %}
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                {% else %}
+                {% for trans in table_data%}
+                <tr>
+                    <td></td>
+                    <td>{{ trans[1] }}</td>
+                    <td>{{ trans[3] }}</td>
+                    <td>{{ trans[4] }}</td>
+                    <td>{{ trans[5] }}</td>
+                    <td>{{ trans[6] }}</td>
+                    <td>
+                        <!-- Button trigger model for the edit form -->
+                        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#staticBackdrop_{{ trans[0] }}">Edit</button>
+
+                        <!-- Modal for the edit form -->
+                        <div class="modal fade" id="staticBackdrop_{{ trans[0] }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="/edit" method="post" class="needs-validation" novalidate>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom01" class="form-label">Status</label>
+                                                    <input name="status" value="{{ trans[1] }}" class="form-control" autofocus autocomplete="off" id="validationCustom01" style="color: #112233;background-color: whitesmoke;" readonly>
+                                                    <div class="invalid-feedback">
+                                                        The name of the account is needed!
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom02" class="form-label">Name</label>
+                                                    <input type="text" name="name" autofocus autocomplete="off" class="form-control" id="validationCustom02" value="{{ trans[3] }}" required>
+                                                    <div class="invalid-feedback">
+                                                        The name for the account is needed!
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom03" class="form-label">Amount</label>
+                                                    <input type="number" name="amount" autocomplete="off" autofocus class="form-control" value="{{ trans[4] }}" id="validationCustom03" required>
+                                                    <div class="invalid-feedback">
+                                                        The amount for the account is needed!
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom04" class="form-label">Date</label>
+                                                    <input type="date" name="date" class="form-control" id="validationCustom04" value="{{ trans[-1] }}" required>
+                                                    <div class="invalid-feedback">
+                                                        The date for the account is needed!
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <label  class="form-label">Comment</label>
+                                                    <textarea class="form-control" name="comment" autofocus autocomplete="off" rows="3">{{ trans[5] }}</textarea>
+                                                    <input type="hidden" name="edit_trans" value="{{ trans[0] }},{{ trans[-2]}},savings">
+                                                </div>
+                                            </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Edit Transaction</button>
+                                    </div>
+                                </form>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <!-- Button trigger modal for the delete button -->
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#staticBackdrop_del_{{ trans[0] }}">
+                            Delete
+                        </button>
+                        
+                        <!-- Modal for the delete for the delete form-->
+                        <div class="modal fade" id="staticBackdrop_del_{{ trans[0] }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title text-center" id="staticBackdropLabel">Are you sure you want to delete the following?</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-md-6"><p>Status:</p></div>
+                                            <div class="col-md-6"><p>{{ trans[1]}} </p></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6"><p>Name:</p></div>
+                                            <div class="col-md-6"><p>{{ trans[3] }}</p></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6"><p>Amount:</p></div>
+                                            <div class="col-md-6"><p>{{ trans[4] }}</p></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6"><p>Comment:</p></div>
+                                            <div class="col-md-6"><p>{{ trans[5] }}</p></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6"><p>Date:</p></div>
+                                            <div class="col-md-6"><p>{{ trans[6] }}</p></div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <form action="/delete" method="post">
+                                            <input type="hidden" name="delete_trans" value="{{ trans[0] }},{{ trans[6]}},savings">
+                                            <button type="submit" class="btn btn-primary">Delete Transaction</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- The graph section-->
+<div class="row p-3 mb-3" style="color: whitesmoke;">
+    <div class="col-md-12">
+        <canvas id="myChart" style="background-color: #112233;border-radius: 5px;"></canvas>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                // Get the data passed from Flask
+                const data = {{ data1 | tojson }};
+                
+                // Initialize the chart with empty datasets
+                const ctx = document.getElementById('myChart').getContext('2d');
+                const myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: data.datasets.map(dataset => ({
+                            label: dataset.label,
+                            backgroundColor: dataset.backgroundColor,
+                            borderColor: dataset.borderColor,
+                            data: [],
+                            fill: true,
+                        }))
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            duration: 2000, // Animation duration in milliseconds
+                            easing: 'linear', // Linear easing for smooth animation
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Month'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Function to add data points smoothly
+                function addDataPoints(chart, label, dataPoints) {
+                    chart.data.labels.push(label);
+                    chart.data.datasets.forEach((dataset, index) => {
+                        dataset.data.push(dataPoints[index]);
+                    });
+                    chart.update();
+                }
+
+                // Add data points smoothly without delay
+                const labels = data.labels;
+                const datasetsData = data.datasets.map(dataset => dataset.data);
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index < labels.length) {
+                        const dataPoints = datasetsData.map(data => data[index]);
+                        addDataPoints(myChart, labels[index], dataPoints);
+                        index++;
+                    } else {
+                        clearInterval(interval); // Stop the interval once all data points are added
+                    }
+                }, 300); // Adjust the interval time to control the speed of progressive rendering
+            });
+        </script>
+    </div>
+</div>
+
+<!-- Below holds the wishlist -->
+<div class="row table-section">
+    <div class="col-md-12 table-responsive">
+        <table class="table table-hover table-responsive">
+            <h3 style="text-align: center;background-color: #112233;margin: auto 0;">Wish list</h3>
+            <thead>
+                <th> <!-- There are an additional column head when using bootstrap tables-->
+                    <td>Name of item</td>
+                    <td>Amount</td>
+                    <td>Comment</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td>Mini laptop</td>
+                    <td>1300</td>
+                    <td>Hopefully this year or beginning of next year</td>
+                    <td>
+                        <!-- This is the edit button--><!-- Button trigger model for the edit form -->
+                        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#staticBackdrop_101">Edit</button>
+
+                        <!-- Modal for the edit form -->
+                        <div class="modal fade" id="staticBackdrop_101" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="/edit" method="post" class="needs-validation" novalidate>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom01" class="form-label">Item name</label>
+                                                    <input name="status" value="Mini laptop" class="form-control" autofocus autocomplete="off" id="validationCustom01" style="color: #112233;background-color: whitesmoke;" required>
+                                                    <div class="invalid-feedback">
+                                                        The name of the item is needed!
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom02" class="form-label">Amount</label>
+                                                    <input type="number" name="amount" autocomplete="off" autofocus class="form-control" value="1300" id="validationCustom02" required>
+                                                    <div class="invalid-feedback">
+                                                        The amount for the item is needed!
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <label  class="form-label">Comment</label>
+                                                    <textarea class="form-control" name="comment" autofocus autocomplete="off" rows="3">The sooner, the better</textarea>
+                                                    <input type="hidden" name="edit_trans" value="wishlist">
+                                                </div>
+                                            </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary">Edit Transaction</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- The delete for the table-->
+
+                    <td>
+                        <!-- Button trigger modal for the delete button -->
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#staticBackdrop_del_101">
+                            Delete
+                        </button>
+                        
+                        <!-- Modal for the delete for the delete form-->
+                        <div class="modal fade" id="staticBackdrop_del_101" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <h5>Are you you want to remove "Mini laptop" from the wishlist ?</h5>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <form action="/delete" method="post">
+                                            <input type="hidden" name="Mini laptop" value="101">
+                                            <button type="submit" class="btn btn-primary">Remove from your wishlist</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- This is for the buy option -->
+
+                    <td>
+                        <!-- Button trigger modal for the buy button -->
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop_buy_101">
+                            Buy
+                        </button>
+
+                        <!-- Modal for the edit form -->
+                        <div class="modal fade" id="staticBackdrop_buy_101" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <!-- The form for the buy option -->
+                                    <div class="modal-body">
+                                        <form action="/edit" method="post" class="needs-validation" novalidate>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom99" class="form-label">Account</label>
+                                                    <input name="status" class="form-control" autofocus autocomplete="off" id="validationCustom99" style="color: #112233;background-color: whitesmoke;" required>
+                                                    <div class="invalid-feedback">
+                                                        The name of the account is needed!
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom98" class="form-label">Item name</label>
+                                                    <input name="status" value="Mini laptop" class="form-control" autofocus autocomplete="off" id="validationCustom98" style="color: #112233;background-color: whitesmoke;" required>
+                                                    <div class="invalid-feedback">
+                                                        The name of the item is needed!
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom97" class="form-label">Amount</label>
+                                                    <input type="number" name="amount" autocomplete="off" autofocus class="form-control" value="1300" id="validationCustom97" required>
+                                                    <div class="invalid-feedback">
+                                                        The amount for the item is needed!
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom96" class="form-label">Date</label>
+                                                    <input type="date" name="date" class="form-control" id="validationCustom96" required>
+                                                    <div class="invalid-feedback">
+                                                        The date for the account is needed!
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <label  class="form-label">Comment</label>
+                                                    <textarea class="form-control" name="comment" autofocus autocomplete="off" rows="3">The sooner, the better</textarea>
+                                                    <input type="hidden" name="something" value="buy">
+                                                </div>
+                                            </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary">Add to expense</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="row justify-content-center" style="margin-top: 0;background-color: yellowgreen;">
+    <div class="col-md-4" style="margin: auto auto;">
+        <button class="btn btn-primary"><a href="/add_wishlist" class="nav-link" style="color: #112233;">Add item to wishlist</a></button>
+    </div>
+</div>
+{% endblock %}

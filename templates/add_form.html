@@ -1,0 +1,110 @@
+{% extends "index_layout.html" %}
+
+{% block main_section %}
+<div class="row p-3" style="row-gap: 20px;">
+  <!-- The form -->
+  <div class="col-md-6">
+      <div class="card">
+          <div class="card-body">
+            <form method="POST" action="/add_account" class="row g-3 needs-validation" novalidate>
+              <div class="col-md-6">
+                <label for="validationCustom01" class="form-label">Account</label>
+                <input list="AccountNames" name="account" class="form-control" autocomplete="off" autofocus id="validationCustom01" required>
+                <datalist id="AccountNames">
+                  {% for accounts in account_names%}
+                  <option value="{{ accounts[0] }}">
+                  {% endfor %}
+                </datalist>
+                <div class="invalid-feedback">
+                  The name of the account is needed!
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="validationCustom02" class="form-label">Name</label>
+                <input type="text" class="form-control" name="name" autofocus autocomplete="off" id="validationCustom02" required>
+                <div class="invalid-feedback">
+                  The name for the account is needed!
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="validationCustom03" class="form-label">Amount</label>
+                <input type="number" class="form-control" name="amount" autofocus autocomplete="off" id="validationCustom03" required>
+                <div class="invalid-feedback">
+                  The amount for the account is needed!
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="validationCustom04" class="form-label">Date</label>
+                <input type="date" class="form-control" name="date" id="validationCustom04" required>
+                <div class="invalid-feedback">
+                  The date for the account is needed!
+                </div>
+              </div>
+              <div class="col-md-12">
+                <label  class="form-label">Comment</label>
+                <textarea class="form-control" name="comment" autofocus autocomplete="off" rows="3"></textarea>
+              </div>
+              <div class="col-12 p-3" style="display: flex;justify-content: center;">
+                <input type="hidden" name="status" value="Income">
+                <button class="btn" type="submit">Add transaction</button>
+              </div>
+            </form>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    // Example starter JavaScript for disabling form submissions if there are invalid fields
+    (function () {
+      'use strict'
+
+      // Fetch all the forms we want to apply custom Bootstrap validation styles to
+      var forms = document.querySelectorAll('.needs-validation')
+
+      // Loop over them and prevent submission
+      Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+          form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+              event.preventDefault()
+              event.stopPropagation()
+            }
+
+            form.classList.add('was-validated')
+          }, false)
+        })
+    })()
+  </script>
+
+  <!-- The table showing the existing entries-->
+  <div class="col-md-6">
+    <div class="card" style="height: 410px;">
+      <div class="card-body table-responsive">
+          <table class="table table-striped table-responsive">
+              <thead>
+                  <th>
+                      <td>Account</td>
+                      <td>Name</td>
+                      <td>Amount</td>
+                      <td>Comment</td>
+                      <td>Date</td>
+                  </th>
+              </thead>
+              <tbody>
+                  {% for trans in table_data %}
+                  <tr>
+                    <td></td>
+                    <td>{{ trans[0] }}</td>
+                    <td>{{ trans[1] }}</td>
+                    <td>{{ trans[2] }}</td>
+                    <td>{{ trans[3] }}</td>
+                    <td>{{ trans[4] }}</td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

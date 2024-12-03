@@ -1,0 +1,93 @@
+*{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: whitesmoke;
+}
+
+.card-section, .table-section{
+    background-color: #111;
+}
+
+.table-section table{
+    --bs-table-bg: grey;
+}
+
+
+/* The top navbar setting */
+.navbar-nav .nav-link.active, .navbar-nav .nav-link.show, .nav-link {
+    color: whitesmoke;
+}
+
+.navbar-nav{
+    --bs-nav-link-hover-color: #fff;
+}
+
+.btn-outline-primary{
+    color: #112233;
+    border-color: whitesmoke;
+    --bs-btn-color: whitesmoke;
+    --bs-btn-border-color: whitesmoke;
+    --bs-btn-hover-bg: whitesmoke;
+    --bs-btn-hover-border-color: whitesmoke;
+    --bs-btn-active-bg: whitesmoke;
+    --bs-btn-active-border-color: whitesmoke;
+    --bs-btn-hover-color: #112233;
+}
+
+.dropdown-menu{
+    --bs-dropdown-bg: rgb(0, 30, 60);
+    --bs-dropdown-color: whitesmoke;
+}
+
+.dropdown-item{
+    color: whitesmoke;
+}
+
+/* The side navbar settings */
+.nav-item .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+    color: #112233;
+    background-color: whitesmoke;
+}
+
+.navbar-toggler {
+    color: whitesmoke;
+    background-color: whitesmoke;
+    border: var(--bs-border-width) solid var(--bs-navbar-toggler-border-color);
+}
+
+/* The card section settings */
+.card{
+    --bs-card-bg: #112233;
+}
+
+.card-body{
+    color: whitesmoke;
+}
+
+/* the table section */
+.table{
+    --bs-table-bg: #112233;
+}
+
+.table>:not(caption)>*>* {
+    color: whitesmoke;
+}
+
+.table-section .table>:not(caption)>*>* {
+    color: whitesmoke;
+    background-color: #112233;
+    border-top-width: var(--bs-border-width);
+}
+
+hr{
+    border: 1px solid white;
+}
+
+/* The form section */
+.btn{
+    background-color: whitesmoke;
+    --bs-btn-color: #112233;
+}
+
+.modal-content{
+    background-color: #112233;
+}

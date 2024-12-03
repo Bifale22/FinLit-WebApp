@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../static/css/style.css">
+    <script src="../static/js/chart.min.js"></script>
+    <title> {{ title_name }} </title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg" style="background-color: #112233;">
+        <div class="container-fluid" style="background-color: #112233;">
+          <a class="navbar-brand p-0 m-0 d-flex flex-column" href="/">
+              <img src="../static/images/logo.png" alt="the logo" class="img-fluid" width="75px">
+          </a>
+          
+          <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent" style="background-color: #112233;">
+            <ul class="navbar-nav p-2 gap-4 me-3">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="/">Home</a>
+              </li>
+              <li><a class="nav-link" href="/add_account">Add Income</a></li>
+              <li><a class="nav-link" href="/add_expense">Add Expense</a></li>
+              <li><a class="nav-link" href="/add_savings">Add to savings</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <!-- The body -->
+      <div class="container-fluid" style="background-color: #111;">
+        <div class="row" style="height: 553px;">
+            <!-- The side bar -->
+            <div class="col-md-2" style="background-color:rgb(0, 30, 60);border-top: 2px solid whitesmoke;">
+                <div class="container-fluid d-flex flex-column sticky-top">
+                    <ul class="nav nav-pills flex-column mb-auto mt-2">
+                        <li class="nav-item"><a href="/overview" class="nav-link text-white {{ overview_sidebar }}">Overview</a></li>
+                        <li class="nav-item"><a href="/accounts" class="nav-link text-white {{ account_sidebar}}">Accounts</a></li>
+                        <li class="nav-item"><a href="/expense" class="nav-link text-white {{ expense_sidebar}}">Expense</a></li>
+                        <li class="nav_item"><a href="/savings" class="nav-link text-white {{ savings_sidebar}}">Savings</a></li>
+                        <li><a href="#" class="nav-link text-white {{ account_analysis_sidebar}}">Account Analysis</a></li>
+                    </ul> 
+                </div>
+            </div>
+            <!-- The main section -->
+            <div class="col-md-10" style="background-color: #111;">
+                {% block main_section %}{% endblock %}
+            </div>
+            <div class="container-fluid" style="background-color: rgb(0, 30, 60);;">
+              <div class="row align-items-center justify-content-center" style="height: 10vh;">
+                <div class="col-md-12 text-center">
+                  <p class="footer" style="margin: auto auto;"><b>Copyright &copy; FinLit 2024</b></p>
+                </div>
+              </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="../statict/js/jquery.min.js"></script>
+<script src="../static/js/popper.min.js"></script>
+<script src="../static/js/bootstrap.min.js"></script>
+</html>

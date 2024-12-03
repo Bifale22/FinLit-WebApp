@@ -1,0 +1,191 @@
+{% extends "index_layout.html" %}
+
+{% block main_section %}
+<!-- card section row -->
+<div class="row justify-content-around card-section p-3" style="row-gap: 10px;">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Percentage Contributions</h6><hr>
+                <table class="table table-borderless">
+                    <tr>
+                        <td>Income Remaining:</td>
+                        <td>{{ inc_per }}%</td>
+                    </tr>
+                    <tr>
+                        <td>Expense Consumed:</td>
+                        <td>{{ exp_per }}%</td>
+                    </tr><br>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Amount Contributions</h6><hr>
+                <table class="table table-borderless">
+                    <tr>
+                        <td>Total Income:</td>
+                        <td>{{ total_income }}</td>
+                    </tr>
+                    <tr>
+                        <td>Total Expense:</td>
+                        <td>{{ total_expense }}</td>
+                    </tr>
+                    <tr>
+                        <td>Total Savings:</td>
+                        <td>{{ total_savings }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Transaction history</h6><hr>
+                <table class="table table-borderless">
+                    <tr>
+                        <td>Income transactions:</td>
+                        <td>{{ inc_no }}</td>
+                    </tr>
+                    <tr>
+                        <td>Expense transactions:</td>
+                        <td>{{ exp_no }}</td>
+                    </tr>
+                    <tr>
+                        <td>Savings transactions:</td>
+                        <td> {{savings_no}} </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- The graph section-->
+<div class="row p-3 mb-3" style="color: whitesmoke;">
+    <div class="col-md-12">
+        <canvas id="myChart" style="background-color: #112233;border-radius: 5px;"></canvas>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                // Get the data passed from Flask
+                const data = {{ data | tojson }};
+                
+                // Initialize the chart with empty datasets
+                const ctx = document.getElementById('myChart').getContext('2d');
+                const myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: data.datasets.map(dataset => ({
+                            label: dataset.label,
+                            backgroundColor: dataset.backgroundColor,
+                            borderColor: dataset.borderColor,
+                            data: [],
+                            fill: false,
+                        }))
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            duration: 2000, // Animation duration in milliseconds
+                            easing: 'linear', // Linear easing for smooth animation
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Month'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Function to add data points smoothly
+                function addDataPoints(chart, label, dataPoints) {
+                    chart.data.labels.push(label);
+                    chart.data.datasets.forEach((dataset, index) => {
+                        dataset.data.push(dataPoints[index]);
+                    });
+                    chart.update();
+                }
+
+                // Add data points smoothly without delay
+                const labels = data.labels;
+                const datasetsData = data.datasets.map(dataset => dataset.data);
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index < labels.length) {
+                        const dataPoints = datasetsData.map(data => data[index]);
+                        addDataPoints(myChart, labels[index], dataPoints);
+                        index++;
+                    } else {
+                        clearInterval(interval); // Stop the interval once all data points are added
+                    }
+                }, 300); // Adjust the interval time to control the speed of progressive rendering
+            });
+        </script>
+    </div>
+</div>
+
+<!-- The table section -->
+<div class="row table-section">
+    <div class="col-md-12">
+        <table class="table table-hover table-responsive">
+            <div class="container-fluid p-2" style="background-color: #112233;border-bottom: 1px solid whitesmoke;">
+                <h4 class="text-center">Transaction history</h4>
+            </div>
+            <thead>
+                <th>
+                    <td>Status</td>
+                    <td>Account</td>
+                    <td>Name</td>
+                    <td>Amount</td>
+                    <td>Comment</td>
+                    <td>Date</td>
+                </th>
+            </thead>
+            <tbody>
+                {% if checker == 0 %}
+                <tr>
+                    <td style="height: 40vh;"></td>
+                    <td style="height: 40vh;"></td>
+                    <td style="height: 40vh;"></td>
+                    <td style="height: 40vh;"></td>
+                    <td style="height: 40vh;"></td>
+                    <td style="height: 40vh;"></td>
+                    <td style="height: 40vh;"></td>
+                </tr>
+                {% else %}
+                {% for trans in table_data %}
+                <tr>
+                    <td></td>
+                    <td>{{ trans[1] }}</td>
+                    <td>{{ trans[2] }}</td>
+                    <td>{{ trans[3] }}</td>
+                    <td>{{ trans[4] }}</td>
+                    <td>{{ trans[5] }}</td>
+                    <td>{{ trans[6] }}</td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

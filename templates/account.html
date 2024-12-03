@@ -1,0 +1,362 @@
+{% extends "index_layout.html" %}
+
+{% block main_section %}
+<!-- card with graph section row -->
+<div class="row justify-content-around align-items card-section p-3" style="row-gap: 10px;">
+    <!-- The Stat table showing the records -->
+    <div class="col-md-4 align-self-center">
+        <div class="card" style="height: 353px;">
+            <div class="card-body">
+                <h5 class="card-title">Account statistics</h5><hr>
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="card-title">Income total:</td>
+                        <td>{{ total_amount }}</td>
+                    </tr>
+                    <tr>
+                        <td class="card-title">Savings total:</td>
+                        <td>{{ income_savings }}</td>
+                    </tr>
+                    <tr>
+                        <td class="card-title">Balance total (Without Savings):</td>
+                        <td>{{ bal }} ({{ ws_bal }})</td>
+                    </tr>
+                    <tr>
+                        <td class="card-title">Savings remaining:</td>
+                        <td>{{ savings_rem }}</td>
+                    </tr>
+                    <tr>
+                        <td class="card-title">Percentage Remaining:</td>
+                        <td>{{ per_contribution }}%</td>
+                    </tr>
+                    <tr>
+                        <td class="card-title">Number of transactions:</td>
+                        <td>{{ trans_no }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- The graph showing the current performance-->
+    <div class="col-md-8">
+        <canvas id="myChart" style="background-color: #112233;border-radius: 5px;"></canvas>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                // Get the data passed from Flask
+                const data = {{ data | tojson }};
+                
+                // Initialize the chart with an empty dataset
+                const ctx = document.getElementById('myChart').getContext('2d');
+                const myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: data.datasets[0].label,
+                            backgroundColor: data.datasets[0].backgroundColor,
+                            borderColor: data.datasets[0].borderColor,
+                            data: [],
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            duration: 2000, // Animation duration in milliseconds
+                            easing: 'linear', // Linear easing for smooth animation
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Month'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Function to add data points smoothly
+                function addDataPoint(chart, label, data) {
+                    chart.data.labels.push(label);
+                    chart.data.datasets.forEach((dataset) => {
+                        dataset.data.push(data);
+                    });
+                    chart.update();
+                }
+
+                // Add data points smoothly with a continuous animation
+                const labels = data.labels;
+                const datasetData = data.datasets[0].data;
+                let index = 0;
+                function addNextPoint() {
+                    if (index < labels.length) {
+                        addDataPoint(myChart, labels[index], datasetData[index]);
+                        index++;
+                        setTimeout(addNextPoint, 2000); // 1 second delay between points
+                    }
+                }
+                addNextPoint();
+            });
+        </script>
+    </div>
+<!-- The table section -->
+<div class="row table-section">
+    <div class="col-md-12 table-responsive">
+        <table class="table table-hover table-responsive">
+            <thead>
+                <th>
+                    <td>Account</td>
+                    <td>Name</td>
+                    <td>Amount</td>
+                    <td>Comment</td>
+                    <td>Date</td>
+                    <td></td>
+                    <td></td>
+                </th>
+            </thead>
+            <tbody>
+                <!-- This is for an empty -->
+                {% if checker == 0 %}
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                <td style="height: 40vh;"></td>
+                {% else %}
+                {% for trans in table_data%}
+                <tr>
+                    <td></td>
+                    <td>{{ trans[1] }}</td>
+                    <td>{{ trans[2] }}</td>
+                    <td>{{ trans[3] }}</td>
+                    <td>{{ trans[4] }}</td>
+                    <td>{{ trans[5] }}</td>
+                    <td>
+                        <!-- Button trigger model for the edit form -->
+                        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#staticBackdrop_{{ trans[0] }}">Edit</button>
+
+                        <!-- Modal for the edit form -->
+                        <div class="modal fade" id="staticBackdrop_{{ trans[0] }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="/edit" method="post" class="needs-validation" novalidate>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom01" class="form-label">Account</label>
+                                                    <input type="text" name="account" class="form-control" autofocus autocomplete="off" id="validationCustom01" value="{{ trans[1] }}" required>
+                                                    <div class="invalid-feedback">
+                                                        The name of the account is needed!
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom02" class="form-label">Name</label>
+                                                    <input type="text" name="name" autofocus autocomplete="off" class="form-control" id="validationCustom02" value="{{ trans[2] }}" required>
+                                                    <div class="invalid-feedback">
+                                                        The name for the account is needed!
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom03" class="form-label">Amount</label>
+                                                    <input type="number" name="amount" autocomplete="off" autofocus class="form-control" value="{{ trans[3] }}" id="validationCustom03" required>
+                                                    <div class="invalid-feedback">
+                                                        The amount for the account is needed!
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="validationCustom04" class="form-label">Date</label>
+                                                    <input type="date" name="date" class="form-control" id="validationCustom04" value="{{ trans[-1] }}" required>
+                                                    <div class="invalid-feedback">
+                                                        The date for the account is needed!
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <label  class="form-label">Comment</label>
+                                                    <textarea class="form-control" name="comment" autofocus autocomplete="off" rows="3">{{ trans[4] }}</textarea>
+                                                    <input type="hidden" name="edit_trans" value="{{ trans[0] }},{{ trans[5]}},accounts">
+                                                </div>
+                                            </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Edit Transaction</button>
+                                    </div>
+                                </form>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <!-- Button trigger modal for the delete button -->
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#staticBackdrop_del_{{ trans[0] }}">
+                            Delete
+                        </button>
+                        
+                        <!-- Modal for the delete for the delete form-->
+                        <div class="modal fade" id="staticBackdrop_del_{{ trans[0] }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title text-center" id="staticBackdropLabel">Are you sure you want to delete the following?</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-md-6"><p>Account:</p></div>
+                                            <div class="col-md-6"><p>{{ trans[1] }}</p></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6"><p>Name:</p></div>
+                                            <div class="col-md-6"><p>{{ trans[2] }}</p></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6"><p>Amount:</p></div>
+                                            <div class="col-md-6"><p>{{ trans[3] }}</p></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6"><p>Comment:</p></div>
+                                            <div class="col-md-6"><p>{{ trans[4] }}</p></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6"><p>Date:</p></div>
+                                            <div class="col-md-6"><p>{{ trans[5] }}</p></div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <form action="/delete" method="post">
+                                            <input type="hidden" name="delete_trans" value="{{ trans[0] }},{{ trans[5]}},accounts">
+                                            <button type="submit" class="btn btn-primary">Delete Transaction</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Example starter JavaScript for disabling form submissions if there are invalid fields
+        (function () {
+          'use strict'
+    
+          // Fetch all the forms we want to apply custom Bootstrap validation styles to
+          var forms = document.querySelectorAll('.needs-validation')
+    
+          // Loop over them and prevent submission
+          Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+              form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }
+    
+                form.classList.add('was-validated')
+              }, false)
+            })
+        })()
+    </script>
+
+</div>
+<!-- The graph section-->
+<div class="row" style="color: whitesmoke;">
+    <div class="col-md-12">
+        <canvas id="myDough" style="background-color: #112233;border-radius: 5px;"></canvas>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                // Get the data passed from Flask
+                const data = {{ data1 | tojson }};
+                
+                // Initialize the chart with an empty dataset
+                const ctx = document.getElementById('myDough').getContext('2d');
+                const myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: data.datasets[0].label,
+                            backgroundColor: data.datasets[0].backgroundColor,
+                            borderColor: data.datasets[0].borderColor,
+                            data: [],
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            duration: 2000, // Animation duration in milliseconds
+                            easing: 'linear', // Linear easing for smooth animation
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Month'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Function to add data points smoothly
+                function addDataPoint(chart, label, data) {
+                    chart.data.labels.push(label);
+                    chart.data.datasets.forEach((dataset) => {
+                        dataset.data.push(data);
+                    });
+                    chart.update();
+                }
+
+                // Add data points smoothly with a continuous animation
+                const labels = data.labels;
+                const datasetData = data.datasets[0].data;
+                let index = 0;
+                function addNextPoint() {
+                    if (index < labels.length) {
+                        addDataPoint(myChart, labels[index], datasetData[index]);
+                        index++;
+                        setTimeout(addNextPoint, 2000); // 1 second delay between points
+                    }
+                }
+                addNextPoint();
+            });
+        </script>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+  

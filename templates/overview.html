@@ -1,0 +1,78 @@
+{% extends "index_layout.html" %}
+
+{% block main_section%}
+<!-- The graph section-->
+<div class="row p-3 mb-3" style="color: whitesmoke;">
+    <div class="col-md-12">
+        <canvas id="myChart" style="background-color: #112233;border-radius: 5px;"></canvas>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                // Get the data passed from Flask
+                const data = {{ data | tojson }};
+                
+                // Initialize the chart with empty datasets
+                const ctx = document.getElementById('myChart').getContext('2d');
+                const myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: data.datasets.map(dataset => ({
+                            label: dataset.label,
+                            backgroundColor: dataset.backgroundColor,
+                            borderColor: dataset.borderColor,
+                            data: [],
+                            fill: false,
+                        }))
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            duration: 2000, // Animation duration in milliseconds
+                            easing: 'linear', // Linear easing for smooth animation
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Month'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Function to add data points smoothly
+                function addDataPoints(chart, label, dataPoints) {
+                    chart.data.labels.push(label);
+                    chart.data.datasets.forEach((dataset, index) => {
+                        dataset.data.push(dataPoints[index]);
+                    });
+                    chart.update();
+                }
+
+                // Add data points smoothly without delay
+                const labels = data.labels;
+                const datasetsData = data.datasets.map(dataset => dataset.data);
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index < labels.length) {
+                        const dataPoints = datasetsData.map(data => data[index]);
+                        addDataPoints(myChart, labels[index], dataPoints);
+                        index++;
+                    } else {
+                        clearInterval(interval); // Stop the interval once all data points are added
+                    }
+                }, 300); // Adjust the interval time to control the speed of progressive rendering
+            });
+        </script>
+    </div>
+</div>
+{% endblock %}
